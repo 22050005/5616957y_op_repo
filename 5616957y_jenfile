@@ -1,0 +1,77 @@
+pipeline {
+    agent any
+    stages {
+        stage('5616957y_OP_S1') {
+            steps {
+                sh '''
+                docker rmi uatsvr_image || true
+                docker commit 5616957y_uatsvr.localdomain uatsvr_image
+                bolt script run /tmp/5616957y/research/5616957y_script -t 5616957y_uatsvr.localdomain -u clientadm -p user123 --no-host-key-check --run-as root
+                '''
+                echo "5616957y_OP_S1: uat web server is backup and updated"
+            }
+        }
+        stage('5616957y_OP_S2') {
+            steps {
+                script {
+                    def curlResult = sh(script: "curl -Is http://5616957y_uatsvr.localdomain | head -n 1 > /tmp/uatsvr-result-file", returnStatus: true)
+                    def uatStatus = sh(script: "cat /tmp/uatsvr-result-file", returnStdout: true).trim()
+                    if (uatStatus == "HTTP/1.1 200 OK") {
+                        echo "5616957y_OP_S2: uat svr is running"
+                    } else {
+                        echo "5616957y_OP_S2: uat svr fails"
+                        error("UAT server is not running")
+                    }
+                }
+            }
+        }
+        stage('5616957y_OP_S3') {
+            steps {
+                echo "5616957y_OP_S3: Proceed stress test uat web server?"
+                input message: 'Proceed with stress test on uat web server?', ok: 'Proceed'
+            }
+        }
+        stage('5616957y_OP_S4') {
+            steps {
+                echo "5616957y_OP_S4: Stress test result is good"
+            }
+        }
+        stage('5616957y_OP_S5') {
+            steps {
+                echo "5616957y_OP_S5: Deploy new update to prod web server?"
+                input message: 'Proceed to update prod web server?', ok: 'Proceed'
+            }
+        }
+        stage('5616957y_OP_S6') {
+            steps {
+                sh '''
+                docker rmi prodsvr_image || true
+                docker commit 5616957y_prodsvr.localdomain prodsvr_image
+                bolt script run /tmp/5616957y/research/5616957y_script -t 5616957y_prodsvr.localdomain -u clientadm -p user123 --no-host-key-check --run-as root
+                '''
+                echo "5616957y_OP_S6: prod web server is backup and updated"
+            }
+        }
+        stage('5616957y_OP_S7') {
+            steps {
+                script {
+                    def curlResult = sh(script: "curl -Is http://5616957y_prodsvr.localdomain | head -n 1 > /tmp/prodsvr-result-file", returnStatus: true)
+                    def prodStatus = sh(script: "cat /tmp/prodsvr-result-file", returnStdout: true).trim()
+                    if (prodStatus == "HTTP/1.1 200 OK") {
+                        echo "5616957y_OP_S7: Production website is operational"
+                    } else {
+                        def userChoice = input(
+                            message: 'Production website is not operational. Choose an action:',
+                            parameters: [choice(name: 'ACTION', choices: ['Trigger roll back', 'Troubleshooting'], description: 'Select an action')]
+                        )
+                        if (userChoice == 'Trigger roll back') {
+                            echo "5616957y_OP-S7: Production website is rolling back"
+                        } else {
+                            echo "5616957y_OP-S7: Troubleshooting of Production website is in progress"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
