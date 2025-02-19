@@ -61,13 +61,13 @@ pipeline {
                         echo "5616957y_OP_S7: Production website is operational"
                     } else {
                         def userChoice = input(
-                            message: 'Production website is not operational. Choose an action:',
+                            message: 'Production server is not running. Choose an action:',
                             parameters: [choice(name: 'ACTION', choices: ['Trigger roll back', 'Troubleshooting'], description: 'Select an action')]
                         )
                         if (userChoice == 'Trigger roll back') {
-                            echo "5616957y_OP_S7: Production website is rolling back"
+                            echo "5616957y_OP-S7: Production website is rolling back"
                         } else {
-                            echo "5616957y_OP_S7: Troubleshooting of Production website is in progress"
+                            echo "5616957y_OP-S7: Troubleshooting of Production website is in progress"
                         }
                     }
                 }
