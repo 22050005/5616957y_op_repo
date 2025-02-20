@@ -3,12 +3,23 @@ pipeline {
     stages {
         stage('5616957y_OP_S1') {
             steps {
-                sh '''
-                docker rmi uatsvr_image || true
-                docker commit 5616957y_uatsvr.localdomain uatsvr_image
-                bolt script run /tmp/5616957y/research/5616957y_script -t 5616957y_uatsvr.localdomain -u clientadm -p user123 --no-host-key-check --run-as root
-                '''
-                echo "5616957y_OP_S1: uat web server is backup and updated"
+                script {
+                    // Check if the image exists before attempting to remove it
+                    def imageExists = sh(script: "docker image inspect uatsvr_image >/dev/null 2>&1", returnStatus: true) == 0
+                    if (imageExists) {
+                        sh 'docker rmi uatsvr_image'
+                    }
+                    
+                    // Check if the container exists before attempting to commit it
+                    def containerExists = sh(script: "docker inspect 5616957y_uatsvr.localdomain >/dev/null 2>&1", returnStatus: true) == 0
+                    if (containerExists) {
+                        sh 'docker commit 5616957y_uatsvr.localdomain uatsvr_image'
+                        sh 'bolt script run /tmp/5616957y/research/5616957y_script -t 5616957y_uatsvr.localdomain -u clientadm -p user123 --no-host-key-check --run-as root'
+                        echo "5616957y_OP_S1: uat web server is backup and updated"
+                    } else {
+                        error "Container 5616957y_uatsvr.localdomain does not exist"
+                    }
+                }
             }
         }
         stage('5616957y_OP_S2') {
@@ -44,12 +55,23 @@ pipeline {
         }
         stage('5616957y_OP_S6') {
             steps {
-                sh '''
-                docker rmi prodsvr_image || true
-                docker commit 5616957y_prodsvr.localdomain prodsvr_image
-                bolt script run /tmp/5616957y/research/5616957y_script -t 5616957y_prodsvr.localdomain -u clientadm -p user123 --no-host-key-check --run-as root
-                '''
-                echo "5616957y_OP_S6: prod web server is backup and updated"
+                script {
+                    // Check if the image exists before attempting to remove it
+                    def imageExists = sh(script: "docker image inspect prodsvr_image >/dev/null 2>&1", returnStatus: true) == 0
+                    if (imageExists) {
+                        sh 'docker rmi prodsvr_image'
+                    }
+                    
+                    // Check if the container exists before attempting to commit it
+                    def containerExists = sh(script: "docker inspect 5616957y_prodsvr.localdomain >/dev/null 2>&1", returnStatus: true) == 0
+                    if (containerExists) {
+                        sh 'docker commit 5616957y_prodsvr.localdomain prodsvr_image'
+                        sh 'bolt script run /tmp/5616957y/research/5616957y_script -t 5616957y_prodsvr.localdomain -u clientadm -p user123 --no-host-key-check --run-as root'
+                        echo "5616957y_OP_S6: prod web server is backup and updated"
+                    } else {
+                        error "Container 5616957y_prodsvr.localdomain does not exist"
+                    }
+                }
             }
         }
         stage('5616957y_OP_S7') {
