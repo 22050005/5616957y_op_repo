@@ -11,13 +11,13 @@ pipeline {
                     }
                     
                     // Check if the container exists before attempting to commit it
-                    def containerExists = sh(script: "docker inspect 5616957y_uatsvr.localdomain >/dev/null 2>&1", returnStatus: true) == 0
+                    def containerExists = sh(script: "docker inspect 5616957y_uatsvr >/dev/null 2>&1", returnStatus: true) == 0
                     if (containerExists) {
-                        sh 'docker commit 5616957y_uatsvr.localdomain uatsvr_image'
-                        sh 'bolt script run /tmp/5616957y/research/5616957y_script -t 5616957y_uatsvr.localdomain -u clientadm -p user123 --no-host-key-check --run-as root'
+                        sh 'docker commit 5616957y_uatsvr uatsvr_image'
+                        sh 'bolt script run /tmp/5616957y/research/5616957y_script -t 5616957y_uatsvr -u clientadm -p user123 --no-host-key-check --run-as root'
                         echo "5616957y_OP_S1: uat web server is backup and updated"
                     } else {
-                        error "Container 5616957y_uatsvr.localdomain does not exist"
+                        error "Container 5616957y_uatsvr does not exist"
                     }
                 }
             }
