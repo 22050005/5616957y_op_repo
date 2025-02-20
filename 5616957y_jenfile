@@ -72,9 +72,9 @@ pipeline {
                     }
                     
                     // Check if the container exists before attempting to commit it
-                    def containerExists = sh(script: "docker inspect 5616957y_prodsvr.localdomain >/dev/null 2>&1", returnStatus: true) == 0
+                    def containerExists = sh(script: "docker inspect 5616957y_prodsvr >/dev/null 2>&1", returnStatus: true) == 0
                     if (containerExists) {
-                        sh 'docker commit 5616957y_prodsvr.localdomain prodsvr_image'
+                        sh 'docker commit 5616957y_prodsvr prodsvr_image'
                         
                         // Run the script for prod server
                         sh '''
@@ -83,11 +83,11 @@ pipeline {
                             rm -rf /tmp/5616957y/research
                             git clone https://github.com/22050005/5616957y_op_repo.git /tmp/5616957y/research
                             chmod +x /tmp/5616957y/research/5616957y_script
-                            sudo bolt script run /tmp/5616957y/research/5616957y_script -t 5616957y_prodsvr.localdomain -u clientadm -p user123 --no-host-key-check --run-as root
+                            sudo bolt script run /tmp/5616957y/research/5616957y_script -t 5616957y_prodsvr -u clientadm -p user123 --no-host-key-check --run-as root
                         '''
                         echo "5616957y_OP_S6: prod web server is backup and updated"
                     } else {
-                        error "Container 5616957y_prodsvr.localdomain does not exist"
+                        error "Container 5616957y_prodsvr does not exist"
                     }
                 }
             }
@@ -95,7 +95,7 @@ pipeline {
         stage('5616957y_OP_S7') {
             steps {
                 script {
-                    def curlResult = sh(script: "curl -Is http://5616957y_prodsvr.localdomain | head -n 1 > /tmp/prodsvr-result-file", returnStatus: true)
+                    def curlResult = sh(script: "curl -Is http://192.168.120.140:80 | head -n 1 > /tmp/prodsvr-result-file", returnStatus: true)
                     def prodStatus = sh(script: "cat /tmp/prodsvr-result-file", returnStdout: true).trim()
                     if (prodStatus == "HTTP/1.1 200 OK") {
                         echo "5616957y_OP_S7: Production website is operational"
