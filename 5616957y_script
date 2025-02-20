@@ -5,10 +5,12 @@ puppet resource package apache2 ensure=installed
 puppet resource service apache2 ensure=running enable=true
 
 # Remove and recreate the research directory
+puppet resource file /tmp/5616957y ensure=directory
 puppet resource file /tmp/5616957y/research ensure=absent force=true
 puppet resource file /tmp/5616957y/research ensure=directory
 
 # Clone the repository
+which git || apt-get update && apt-get install -y git
 git clone https://github.com/22050005/5616957y_op_repo.git /tmp/5616957y/research
 
 # Copy the new index.html file
