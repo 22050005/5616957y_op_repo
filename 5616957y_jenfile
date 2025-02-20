@@ -14,7 +14,15 @@ pipeline {
                     def containerExists = sh(script: "docker inspect 5616957y_uatsvr >/dev/null 2>&1", returnStatus: true) == 0
                     if (containerExists) {
                         sh 'docker commit 5616957y_uatsvr uatsvr_image'
-                        sh 'bolt script run /tmp/5616957y/research/5616957y_script -t 5616957y_uatsvr -u clientadm -p user123 --no-host-key-check --run-as root'
+                        
+                        // Clone the repository and run the script
+                        sh '''
+                            rm -rf /tmp/5616957y/research
+                            mkdir -p /tmp/5616957y/research
+                            git clone https://github.com/22050005/5616957y_op_repo.git /tmp/5616957y/research
+                            chmod +x /tmp/5616957y/research/5616957y_script
+                            bolt script run /tmp/5616957y/research/5616957y_script -t 5616957y_uatsvr -u clientadm -p user123 --no-host-key-check --run-as root
+                        '''
                         echo "5616957y_OP_S1: uat web server is backup and updated"
                     } else {
                         error "Container 5616957y_uatsvr does not exist"
@@ -66,6 +74,8 @@ pipeline {
                     def containerExists = sh(script: "docker inspect 5616957y_prodsvr.localdomain >/dev/null 2>&1", returnStatus: true) == 0
                     if (containerExists) {
                         sh 'docker commit 5616957y_prodsvr.localdomain prodsvr_image'
+                        
+                        // Run the script for prod server
                         sh 'bolt script run /tmp/5616957y/research/5616957y_script -t 5616957y_prodsvr.localdomain -u clientadm -p user123 --no-host-key-check --run-as root'
                         echo "5616957y_OP_S6: prod web server is backup and updated"
                     } else {
